@@ -20,10 +20,18 @@ class Mrsk::Commands::App < Mrsk::Commands::Base
     docker :start, service_with_version_and_destination
   end
 
+  DEFAULT_STOP_WAIT_TIME = 30
+
   def stop(version: nil)
     pipe \
       version ? container_id_for_version(version) : current_container_id,
-      xargs(docker(:stop))
+      xargs(docker(:stop, "-t", config.stop_wait_time || DEFAULT_STOP_WAIT_TIME))
+  end
+
+  def wait(version: nil)
+    pipe \
+      container_id_for_version(version),
+      xargs(docker(:wait))
   end
 
   def info

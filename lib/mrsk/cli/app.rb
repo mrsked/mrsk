@@ -15,7 +15,10 @@ class Mrsk::Cli::App < Mrsk::Cli::Base
             old_version = capture_with_info(*MRSK.app.current_running_version).strip
             execute *MRSK.app.run(role: role.name)
             sleep MRSK.config.readiness_delay
-            execute *MRSK.app.stop(version: old_version), raise_on_non_zero_exit: false if old_version.present?
+            if old_version.present?
+              execute *MRSK.app.stop(version: old_version), raise_on_non_zero_exit: false
+              execute *MRSK.app.wait(version: old_version), raise_on_non_zero_exit: false
+            end
 
           rescue SSHKit::Command::Failed => e
             if e.message =~ /already in use/
@@ -23,6 +26,7 @@ class Mrsk::Cli::App < Mrsk::Cli::Base
               execute *MRSK.auditor.record("Rebooted app version #{version}"), verbosity: :debug
 
               execute *MRSK.app.stop(version: version)
+              execute *MRSK.app.wait(version: version)
               execute *MRSK.app.remove_container(version: version)
               execute *MRSK.app.run(role: role.name)
             else

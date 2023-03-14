@@ -51,8 +51,14 @@ class CommandsAppTest < ActiveSupport::TestCase
 
   test "stop" do
     assert_equal \
-      "docker ps --quiet --filter label=service=app | xargs docker stop",
+      "docker ps --quiet --filter label=service=app | xargs docker stop -t 30",
       @app.stop.join(" ")
+  end
+
+  test "wait" do
+    assert_equal \
+      "docker container ls --all --filter name=app-999 --quiet | xargs docker wait",
+      @app.wait(version: "999").join(" ")
   end
 
   test "info" do

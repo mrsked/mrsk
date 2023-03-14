@@ -11,6 +11,7 @@ class CliAppTest < CliTestCase
     run_command("boot").tap do |output|
       assert_match /docker run --detach --restart unless-stopped/, output
       assert_match /docker container ls --all --filter name=app-123 --quiet | xargs docker stop/, output
+      assert_match /docker container ls --all --filter name=app-123 --quiet | xargs docker wait/, output
     end
   end
 
@@ -29,7 +30,8 @@ class CliAppTest < CliTestCase
 
     run_command("boot").tap do |output|
       assert_match /Rebooting container with same version 999 already deployed/, output # Can't start what's already running
-      assert_match /docker container ls --all --filter name=app-999 --quiet | xargs docker container rm/, output # Stop old running
+      assert_match /docker container ls --all --filter name=app-999 --quiet | xargs docker container stop/, output # Stop old running
+      assert_match /docker container ls --all --filter name=app-999 --quiet | xargs docker container wait/, output # Wait for old container to stop
       assert_match /docker container ls --all --filter name=app-999 --quiet | xargs docker container rm/, output # Remove old container
       assert_match /docker run/, output # Start new container
     end
