@@ -426,6 +426,58 @@ traefik:
   host_port: 8080
 ```
 
+### Configure docker options for traefik
+
+We allow users to override the published ports and bound volumes for the traefik container like so:
+
+```yaml
+traefik:
+  options:
+    publish:
+    - 9000
+    - 80    
+    volumes:
+      - /tmp/example:/tmp/example
+```
+
+Note, this fully overrides any defaults. If you choose to do this, then you'll like need to start out by copying the 
+default configuration:
+
+```yaml
+traefik:
+  options: 
+    publish:
+    - 80
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  args:
+    entrypoints.web.address: ':80'
+```
+
+A more complete example including entrypoints would be:
+
+```yaml
+service: myservice
+
+labels:
+  traefik.tcp.routers.other.rule: 'HostSNI(`*`)'
+  traefik.tcp.routers.other.entrypoints: otherentrypoint
+  traefik.tcp.services.other.loadbalancer.server.port: 9000
+  traefik.http.routers.myservice.entrypoints: web
+  traefik.http.services.myservice.loadbalancer.server.port: 8080
+
+traefik:
+  options:
+    publish:
+      - 80
+      - 9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  args:
+    entrypoints.web.address: ':80'
+    entrypoints.otherentrypoint.address: ':9000'
+```
+
 ### Configuring build args for new images
 
 Build arguments that aren't secret can also be configured:
